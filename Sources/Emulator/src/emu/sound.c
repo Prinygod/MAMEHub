@@ -77,19 +77,19 @@ sound_stream::sound_stream(device_t &device, int inputs, int outputs, int sample
 	// create a unique tag for saving
 	astring state_tag;
 	state_tag.printf("%d", m_device.machine().sound().m_stream_list.count());
-	m_device.machine().save().save_item("stream", state_tag, 0, NAME(m_sample_rate));
+	m_device.machine().save().save_item(&m_device, "stream", state_tag, 0, NAME(m_sample_rate));
 	m_device.machine().save().register_postload(save_prepost_delegate(FUNC(sound_stream::postload), this));
 
 	// save the gain of each input and output
 	for (int inputnum = 0; inputnum < m_input.count(); inputnum++)
 	{
-		m_device.machine().save().save_item("stream", state_tag, inputnum, NAME(m_input[inputnum].m_gain));
-		m_device.machine().save().save_item("stream", state_tag, inputnum, NAME(m_input[inputnum].m_user_gain));
+		m_device.machine().save().save_item(&m_device, "stream", state_tag, inputnum, NAME(m_input[inputnum].m_gain));
+		m_device.machine().save().save_item(&m_device, "stream", state_tag, inputnum, NAME(m_input[inputnum].m_user_gain));
 	}
 	for (int outputnum = 0; outputnum < m_output.count(); outputnum++)
 	{
 		m_output[outputnum].m_stream = this;
-		m_device.machine().save().save_item("stream", state_tag, outputnum, NAME(m_output[outputnum].m_gain));
+		m_device.machine().save().save_item(&m_device, "stream", state_tag, outputnum, NAME(m_output[outputnum].m_gain));
 	}
 
 	// Mark synchronous streams as such
@@ -1013,6 +1013,7 @@ void sound_manager::config_save(int config_type, xml_data_node *parentnode)
 //-------------------------------------------------
 
 extern bool catchingUp;
+extern bool SKIP_OSD;
 
 void sound_manager::update(void *ptr, int param)
 {
@@ -1056,7 +1057,7 @@ void sound_manager::update(void *ptr, int param)
 	// play the result
 	if (finalmix_offset > 0)
 	{
-		if (!m_nosound_mode && !catchingUp)
+		if (!m_nosound_mode && !catchingUp && !SKIP_OSD)
 			machine().osd().update_audio_stream(finalmix, finalmix_offset / 2);
     // JJG: TODO: Should we send sound to the recording is we are catching up?
 		machine().video().add_sound_to_recording(finalmix, finalmix_offset / 2);
